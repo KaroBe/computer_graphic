@@ -44,4 +44,32 @@ struct shader_program {
   // uniform locations mapped to name
   std::map<std::string, GLint> u_locs{};
 };
+
+//struct for the planets
+struct planet {
+  planet(float const& size, float const& rot_speed, float const& dis_to_origin)
+    :m_size{size},
+    m_rot_speed{rot_speed},
+    m_dis_to_origin{dis_to_origin}
+    {}
+
+  float m_size;
+  float m_rot_speed;
+  float m_dis_to_origin;
+};
+
+//struct for the satellites/moons with given father planet
+struct satellite {
+  satellite(planet const& father, float const& size, float const& rot_speed, float const& dis_to_father)
+    :m_father{father},
+    m_size{size},
+    m_rot_speed{rot_speed},
+    m_dis_to_father{dis_to_father}
+    {}
+
+  planet m_father;
+  float m_size;
+  float m_rot_speed;
+  float m_dis_to_father;
+};
 #endif

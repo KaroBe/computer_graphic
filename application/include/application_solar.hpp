@@ -13,6 +13,7 @@ class ApplicationSolar : public Application {
   // free allocated objects
   ~ApplicationSolar();
 
+  
   // update uniform locations and values
   void uploadUniforms();
   // update projection matrix
@@ -22,7 +23,12 @@ class ApplicationSolar : public Application {
   //handle delta mouse movement input
   void mouseCallback(double pos_x, double pos_y);
 
-  // draw all objects
+  //draws the given planet
+  void upload_planet_transforms(planet p) const;
+  //overloaded function to draw the satellits(moons)
+  void upload_planet_transforms(satellite p) const;
+
+  // calls upload_planet_transforms funct. for all planets/satellites
   void render() const;
 
  protected:
@@ -32,6 +38,10 @@ class ApplicationSolar : public Application {
 
   // cpu representation of model
   model_object planet_object;
+
+  //stores the planets/satellites to render
+  std::vector<planet> all_planets;
+  std::vector<satellite> all_satellites;
 };
 
 #endif
