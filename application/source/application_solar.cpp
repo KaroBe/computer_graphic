@@ -47,6 +47,11 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
     jupiter,saturn, uranus, neptun});
 
   all_satellites.insert(std::end(all_satellites), {mond});
+
+  for (int i = 0; i < 500; ++i)
+  {
+    all_stars.insert(std::end(all_stars), star());
+  }
 }
 
 
@@ -198,6 +203,7 @@ void ApplicationSolar::initializeShaderPrograms() {
 // load models
 void ApplicationSolar::initializeGeometry() {
   model planet_model = model_loader::obj(m_resource_path + "models/sphere.obj", model::NORMAL);
+
 
   // generate vertex array object
   glGenVertexArrays(1, &planet_object.vertex_AO);
