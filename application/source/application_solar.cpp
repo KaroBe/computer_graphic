@@ -48,15 +48,21 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
 
   all_satellites.insert(std::end(all_satellites), {mond});
 
-  for (int i = 0; i < 500; ++i)
+  for (int i = 0; i < 599; ++i)
   {
-    all_stars.insert(std::end(all_stars), star());
+    if (i % 6 < 3)
+    {
+      all_stars.insert(std::end(all_stars), -50 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/100)));
+    }else {
+      all_stars.insert(std::end(all_stars), static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/255)));// wert zwisdhen 0 und 1
+    }
+    
   }
 }
 
 
 //calculates the matrices of the satellites according to the fathers matrices and draws the satellites
-void ApplicationSolar::upload_planet_transforms(satellite p) const{
+void ApplicationSolar::upload_planet_transforms(satellite p) const{all_stars.in
 	 // bind shader to upload uniforms
   glUseProgram(m_shaders.at("planet").handle);
 
@@ -82,7 +88,7 @@ void ApplicationSolar::upload_planet_transforms(satellite p) const{
   glBindVertexArray(planet_object.vertex_AO);
 
   // draw bound vertex array using bound shader
-  glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);
+  glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);// GL draw array für Sterne
 }
 
 
@@ -211,7 +217,7 @@ void ApplicationSolar::initializeGeometry() {
   glBindVertexArray(planet_object.vertex_AO);
 
   // generate generic buffer
-  glGenBuffers(1, &planet_object.vertex_BO);
+  glGenBuffers(1, &planet_object.vertex_BO);// DAS HIER SELBEER MACHEN
   // bind this as an vertex array buffer containing all attributes
   glBindBuffer(GL_ARRAY_BUFFER, planet_object.vertex_BO);
   // configure currently bound array buffer

@@ -73,7 +73,8 @@ struct satellite {
   float m_rot_speed;
   float m_dis_to_father;
 };
- 
+
+/* 
 struct star{
   star():
   position{rand_coord(), rand_coord(), rand_coord()},
@@ -93,5 +94,5 @@ struct star{
     return r;
   }
 };
-
+*/
 #endif

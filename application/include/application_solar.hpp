@@ -42,7 +42,7 @@ class ApplicationSolar : public Application {
   //stores the planets/satellites/stars to render
   std::vector<planet> all_planets;
   std::vector<satellite> all_satellites;
-  std::vector<star> all_stars;
+  std::vector<float> all_stars;
 
 };
 
