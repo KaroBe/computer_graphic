@@ -1,16 +1,16 @@
 layout(location = 0) in vec 3 in_Position;
-layout(location = 0) in vec 3 in_Normal;
+layout(location = 1) in vec 3 in_Color;
 
-uniform mat4 ModelMatrix;
+//uniform mat4 ModelMatrix; ->kein Model, keine Matrix
 uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
-uniform mat4 NormalMatrix;
+//uniform mat4 NormalMatrix;
 
 out vec3 pass_Normal;
 
 void main()
 {
-	gl_Position = (ProjectionMatrix * ViewMatrix * ModelMatrix) * vec4(in_Position, 1.0);
+	gl_Position = (ProjectionMatrix * ViewMatrix) * vec4(in_Position, 1.0);
 
-	pass_Normal = (NormalMatrix * vec4(in_Normal, 0.0)).xyz;
+	pass_color = in_color;
 }

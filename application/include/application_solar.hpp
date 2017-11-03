@@ -38,6 +38,8 @@ class ApplicationSolar : public Application {
 
   // cpu representation of model
   model_object planet_object;
+  model_object star_object;
+
 
   //stores the planets/satellites/stars to render
   std::vector<planet> all_planets;

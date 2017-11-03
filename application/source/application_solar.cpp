@@ -208,6 +208,8 @@ void ApplicationSolar::initializeShaderPrograms() {
 
 // load models
 void ApplicationSolar::initializeGeometry() {
+  //+++++++++++++++++++++++PlANETS++++++++++++++++++++
+
   model planet_model = model_loader::obj(m_resource_path + "models/sphere.obj", model::NORMAL);
 
 
@@ -243,6 +245,40 @@ void ApplicationSolar::initializeGeometry() {
   planet_object.draw_mode = GL_TRIANGLES;
   // transfer number of indices to model object 
   planet_object.num_elements = GLsizei(planet_model.indices.size());
+
+  //+++++++++++++++++STARS+++++++++++++++++++++++++++++++++
+
+  // generate vertex array object
+  glGenVertexArrays(1, &star_object.vertex_AO);
+  // bind the array for attaching buffers
+  glBindVertexArray(star_object.vertex_AO);
+  // generate generic buffer
+  glGenBuffers(1, &star_object.vertex_BO);// DAS HIER SELBEER MACHEN
+  // bind this as an vertex array buffer containing all attributes
+  glBindBuffer(GL_ARRAY_BUFFER, star_object.vertex_BO);
+  // configure currently bound array buffer -> We can use size of container, because we don't have spheres
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * all_stars.size(), all_stars.data(), GL_STATIC_DRAW);
+
+  // activate first attribute on gpu
+  glEnableVertexAttribArray(0);
+  // first attribute is 3 floats with no offset & stride
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), 0);
+  // activate second attribute on gpu
+  glEnableVertexAttribArray(1);
+  // second attribute is 3 floats with no offset & stride
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), 3);
+
+   // generate generic buffer
+  glGenBuffers(1, &star_object.element_BO);
+  // bind this as an vertex array buffer containing all attributes
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, star_object.element_BO);
+  // configure currently bound array buffer
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, model::INDEX.size * star_model.indices.size(), star_model.indices.data(), GL_STATIC_DRAW);
+
+  // store type of primitive to draw
+  star_object.draw_mode = GL_POINTS;
+  // transfer number of indices to model object 
+  star_object.num_elements = GLsizei(all_stars.size());
 }
 
 ApplicationSolar::~ApplicationSolar() {
