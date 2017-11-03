@@ -27,6 +27,7 @@ class ApplicationSolar : public Application {
   void upload_planet_transforms(planet p) const;
   //overloaded function to draw the satellits(moons)
   void upload_planet_transforms(satellite p) const;
+  void upload_stars() const;
 
   // calls upload_planet_transforms funct. for all planets/satellites
   void render() const;
