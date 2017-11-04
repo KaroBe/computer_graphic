@@ -35,6 +35,7 @@ class ApplicationSolar : public Application {
  protected:
   void initializeShaderPrograms();
   void initializeGeometry();
+  void initializeStars();
   void updateView();
 
   // cpu representation of model
