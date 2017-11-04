@@ -11,7 +11,7 @@ uniform mat4 ProjectionMatrix;
 
 out vec3 pass_color;
 
-void main()
+void main(void)
 {
 	gl_Position = (ProjectionMatrix * ViewMatrix) * vec4(in_Position, 1.0);
 	pass_color = in_Color;
