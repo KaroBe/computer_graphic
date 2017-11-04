@@ -137,13 +137,13 @@ void ApplicationSolar::render() const {
 		upload_planet_transforms(all_satellites[i]);
 	}
   upload_stars();
-
+  /*
   glBegin(GL_LINE_LOOP);//start drawing a line loop
       glVertex3f(-3.0f,0.0f,0.0f);//left of window
       glVertex3f(0.0f,-10.0f,0.0f);//bottom of window
       glVertex3f(11.0f,0.0f,0.0f);//right of window
       glVertex3f(0.0f,11.0f,0.0f);//top of window
-    glEnd();//end drawing of line loop
+    glEnd();//end drawing of line loop*/
 }
 
 void ApplicationSolar::updateView() {
