@@ -25,11 +25,7 @@ using namespace gl;
 ApplicationSolar::ApplicationSolar(std::string const& resource_path)
  :Application{resource_path}
  ,planet_object{}
-{/*
-	for(int i=0; i<6*2000; i++){
-    all_stars.push_back(static_cast <float>(rand()%200)-100);
-  }*/
-  
+{
   for (int i = 0; i < 6000; i++)
   { 
     if (i % 6 < 3)
@@ -40,15 +36,11 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
       all_stars.insert(std::end(all_stars), static_cast <float> (rand()) / static_cast <float> (RAND_MAX));    
     }
   }
-    
-    
-
-    
+  
   initializeGeometry();
   initializeStars();
   initializeShaderPrograms();
  
-
    //initializes our planets and satellites
   planet sonne(7.0f, 0.0f, 0.0f);
   planet merkur(0.9f, 0.48f, 10.0f);
@@ -145,6 +137,13 @@ void ApplicationSolar::render() const {
 		upload_planet_transforms(all_satellites[i]);
 	}
   upload_stars();
+
+  glBegin(GL_LINE_LOOP);//start drawing a line loop
+      glVertex3f(-3.0f,0.0f,0.0f);//left of window
+      glVertex3f(0.0f,-10.0f,0.0f);//bottom of window
+      glVertex3f(11.0f,0.0f,0.0f);//right of window
+      glVertex3f(0.0f,11.0f,0.0f);//top of window
+    glEnd();//end drawing of line loop
 }
 
 void ApplicationSolar::updateView() {
@@ -289,7 +288,7 @@ void ApplicationSolar::initializeGeometry() {
 
 // load stars
 void ApplicationSolar::initializeStars(){//+++++++++++++++++STARS+++++++++++++++++++++++++++++++++
-/*
+
   model star_model = {all_stars, model::POSITION | model::NORMAL};
   // generate vertex array object
   glGenVertexArrays(1, &star_object.vertex_AO);
@@ -324,51 +323,6 @@ void ApplicationSolar::initializeStars(){//+++++++++++++++++STARS+++++++++++++++
   star_object.draw_mode = GL_POINTS;
   // transfer number of indices to model object 
   star_object.num_elements = GLsizei(all_stars.size());
-*/
-  model star_model = {
-    all_stars, 
-    model::POSITION | model::NORMAL};
-  // generate vertex array object
-  glGenVertexArrays(1, &star_object.vertex_AO);
-  // bind the array for attaching buffers
-  glBindVertexArray(star_object.vertex_AO);
-  // generate generic buffer
-  glGenBuffers(1, &star_object.vertex_BO);
-  // bind this as an vertex array buffer containing all attributes
-  glBindBuffer(GL_ARRAY_BUFFER, star_object.vertex_BO);
-  // configure currently bound array buffer
-  glBufferData(
-    GL_ARRAY_BUFFER, 
-    sizeof(float) * star_model.data.size(), 
-    star_model.data.data(), 
-    GL_STATIC_DRAW);
-  // activate first attribute on gpu
-  glEnableVertexAttribArray(0);
-  // first attribute is 3 floats with no offset & stride
-  glVertexAttribPointer(0, 
-    model::POSITION.components, 
-    model::POSITION.type, 
-    GL_FALSE, 
-    star_model.vertex_bytes, 
-    star_model.offsets[model::POSITION]);
-  // activate second attribute on gpu
-  glEnableVertexAttribArray(1);
-  // second attribute is 3 floats with no offset & stride
-  glVertexAttribPointer(1, 
-    model::NORMAL.components,
-    model::NORMAL.type, 
-    GL_FALSE, 
-    star_model.vertex_bytes, 
-    star_model.offsets[model::NORMAL]);
-  // generate generic buffer
-  glGenBuffers(1, &star_object.element_BO);
-  // bind this as an vertex array buffer containing all attributes
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, star_object.element_BO);
-  // configure currently bound array buffer
-  glBufferData(
-    GL_ELEMENT_ARRAY_BUFFER, 
-    model::INDEX.size * star_model.indices.size(), star_model.indices.data(), 
-    GL_STATIC_DRAW);
 }
 
 
