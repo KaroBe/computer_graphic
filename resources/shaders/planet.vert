@@ -12,7 +12,6 @@ uniform mat4 NormalMatrix;
 uniform vec3 SunPosition;
 
 out vec3 pass_Normal;
-out vec4 gl_Position;
 
 void main(void)
 {
