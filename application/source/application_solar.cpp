@@ -256,7 +256,9 @@ void ApplicationSolar::upload_planet_transforms(planet const& p) const{
   glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("NormalMatrix"),
                      1, GL_FALSE, glm::value_ptr(normal_matrix));
 
-  glUniform3f(m_shaders.at("planet").u_locs.at("SunPosition"), 0.0f, 0.0f, 0.0f);
+
+  glm::vec3 sunpos = glm::vec3(glm::inverse(m_view_transform) * glm::fvec4{0.0f, 0.0f, 0.0f, 1.0f});
+  glUniform3fv(m_shaders.at("planet").u_locs.at("SunPosition"), 1, glm::value_ptr(sunpos));
   // bind the VAO to draw
   glBindVertexArray(planet_object.vertex_AO);
 
