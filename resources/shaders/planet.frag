@@ -87,6 +87,18 @@ void main()
 
         if(lambertian > 0.0)
         {
+            if (lambertian > 0.8){
+                lambertian = 1.0;
+            }else if(lambertian > 0.6){
+                lambertian = 0.8;
+            }else if(lambertian > 0.4){
+                lambertian = 0.6;
+            }else if(lambertian > 0.2){
+                lambertian = 0.4;
+            }else if(lambertian > 0.0){
+                lambertian = 0.2;
+            }
+            
             float specAngle = max(dot(halfDir, normal), 0.0);
             specular = pow(specAngle, shininess);
         }
