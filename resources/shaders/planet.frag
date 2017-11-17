@@ -12,19 +12,19 @@ out vec4 out_Color;
 const vec3 sunPosition = vec3(0.0, 0.0, 0.0);
 
 //indirect light incoming 
-const vec3 ambientColor = vec3(0.5, 0.5, 0.5);
+const vec3 ambientColor = vec3(0.0005, 0.0005, 0.0005);
 
 //diffusely reflected light
-const vec3 diffuseColor = vec3(0.5, 0.5, 0.5);
+const vec3 diffuseColor = vec3(1.0, 1.0, 1.0);
 
 //Reflection of Light to viewer
-const vec3 specColor = vec3(1.0, 0.9, 0.5);
+const vec3 specColor = vec3(1.0, 1.0, 1.0);
+
+const float difint = 0.5;
+const float specint = 0.9;
 
 //Shininess, woooohoooo
-const float shininess = 5.0;
-
-//
-//const float screenGamma = 2.2;
+const float shininess = 100.0;
 
 void main()
 {	//normalize for dot product n stuff
@@ -59,7 +59,7 @@ void main()
 
     	//}
 	}
-  	vec3 colorLinear = ambientColor + lambertian * diffuseColor + specular * specColor;
+  	vec3 colorLinear = ambientColor + lambertian * diffuseColor * difint + specular * specColor * specint;
 
   	out_Color = vec4(colorLinear, 1.0);
 }
