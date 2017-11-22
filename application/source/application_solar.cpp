@@ -198,7 +198,8 @@ void ApplicationSolar::fillPlanets()
 
 
 //calculates the matrices of the satellites according to the fathers matrices and draws the satellites
-void ApplicationSolar::upload_planet_transforms(satellite const& p) const{
+void ApplicationSolar::upload_planet_transforms(satellite const& p) const
+{
    // bind shader to upload uniforms
   glUseProgram(m_shaders.at("planet").handle);
 
@@ -228,7 +229,8 @@ void ApplicationSolar::upload_planet_transforms(satellite const& p) const{
 }
 
 
-void ApplicationSolar::upload_planet_transforms(planet const& p) const{
+void ApplicationSolar::upload_planet_transforms(planet const& p) const
+{
   //calcs the matrices of the planets
   glm::fmat4 model_matrix = glm::rotate(glm::fmat4{}, float(glfwGetTime()*p.m_rot_speed), glm::fvec3{0.0f, 1.0f, 0.0f});
   model_matrix = glm::translate(model_matrix, glm::fvec3{0.0f, 0.0f, -p.m_dis_to_origin});
@@ -253,8 +255,7 @@ void ApplicationSolar::upload_planet_transforms(planet const& p) const{
     glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ModelMatrix"),
                     1, GL_FALSE, glm::value_ptr(model_matrix));
 
-
-    // extra matrix for normal transformation to keep them orthogonal to surface
+    //extra matrix for normal transformation to keep them orthogonal to surface
     glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
     glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("NormalMatrix"),
                     1, GL_FALSE, glm::value_ptr(normal_matrix));
@@ -268,7 +269,8 @@ void ApplicationSolar::upload_planet_transforms(planet const& p) const{
 }
 
 
-void ApplicationSolar::upload_stars() const {
+void ApplicationSolar::upload_stars() const
+{
   glUseProgram(m_shaders.at("star").handle);
   glBindVertexArray(star_object.vertex_AO);
   glPointSize(1);
@@ -336,6 +338,8 @@ void ApplicationSolar::updateView()
   glUseProgram(m_shaders.at("planet").handle);
   glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ViewMatrix"),
                      1, GL_FALSE, glm::value_ptr(view_matrix));
+  glUniform1f(m_shaders.at("planet").u_locs.at("ShadingMethod"), m_shading_method);
+
 
   glUseProgram(m_shaders.at("star").handle);
   glUniformMatrix4fv(m_shaders.at("star").u_locs.at("ViewMatrix"),
@@ -429,16 +433,18 @@ void ApplicationSolar::keyCallback(int key, int scancode, int action, int mods)
   }
 
   //Bill-Phong Shading
-  /*else if (key == GLFW_KEY_1)
+  else if (key == GLFW_KEY_1)
   {
-    glUniformli(m_shaders.at("planet").u_locs.at("ModelMatrix"), 1);
+    m_shading_method = 0.0f;//glUniform1f(m_shaders.at("planet").u_locs.at("ShadingMethod"), GLfloat(0.0f));
+    updateView();
   }
 
   //Cel shading
   else if (key == GLFW_KEY_2)
   {
-    glUniformli(m_shaders.at("planet").u_locs.at("ModelMatrix"), 2);
-  }*/
+    m_shading_method = 1.0f;//glUniform1f(m_shaders.at("planet").u_locs.at("ShadingMethod"), GLfloat(1.0f));
+    updateView();
+  }
 
 }
 
@@ -466,11 +472,11 @@ void ApplicationSolar::initializeShaderPrograms()
   m_shaders.emplace("planet", shader_program{m_resource_path + "shaders/planet.vert",
                                            m_resource_path + "shaders/planet.frag"});
   // request uniform locations for shader program
-  m_shaders.at("planet").u_locs["NormalMatrix"] = -1;
+  m_shaders.at("planet").u_locs["NormalMatrix"] = -1;//Eigentlich muss das nicht mehr übergeben werden, aber ohne gibt es einen Error
   m_shaders.at("planet").u_locs["ModelMatrix"] = -1;
   m_shaders.at("planet").u_locs["ViewMatrix"] = -1;
   m_shaders.at("planet").u_locs["ProjectionMatrix"] = -1;
-  //m_shaders.at("planet").u_locs["SunPosition"] = -1;
+  m_shaders.at("planet").u_locs["ShadingMethod"] = -1;
   
 
   m_shaders.emplace("star", 

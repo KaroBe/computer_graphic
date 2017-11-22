@@ -9,11 +9,13 @@ layout(location = 1) in vec3 in_Normal;
 uniform mat4 ModelMatrix;
 uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
+uniform float ShadingMethod;
 
 out vec3 pass_WorldNormal;
 out vec3 pass_WorldNormal_view;
 out vec3 pass_vertPos;
 out vec3 pass_vertPos_view;
+out float pass_ShadingMethod;
 
 void main(void)
 {
@@ -26,4 +28,6 @@ void main(void)
 	//In Worlspace
 	pass_WorldNormal = (ModelMatrix * vec4(in_Normal, 0.0)).xyz;
 	pass_WorldNormal_view = (ViewMatrix * ModelMatrix * vec4(in_Normal, 0.0)).xyz;
+
+	pass_ShadingMethod = ShadingMethod;
 }

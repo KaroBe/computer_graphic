@@ -4,9 +4,11 @@ in vec3 pass_WorldNormal;
 in vec3 pass_WorldNormal_view;
 in vec3 pass_vertPos;
 in vec3 pass_vertPos_view;
-in float pass_ShadingMethod;
 
 out vec4 out_Color;
+
+//Blinn-Phong / Cel
+int mode = 2;
 
 //Light source
 const vec3 sunPosition = vec3(0.0, 0.0, 0.0);
@@ -28,16 +30,17 @@ const float shininess = 100.0;
 
 void main()
 {
+    int mode = 1;
+
     vec3 normal = normalize(pass_WorldNormal);
     vec3 normal_view = normalize(pass_WorldNormal_view);
     vec3 lightDir = normalize(sunPosition - pass_vertPos);
-    vec3 colorLinear;
 
     float lambertian = max(dot(lightDir, normal), 0.0);
 
     float specular = 0.0;
 
-    if ( pass_ShadingMethod < 1.0)
+    if ( mode == 1)
     {
         //specular highlight decay
         float specular = 0.0;
@@ -49,12 +52,12 @@ void main()
             specular = pow(specAngle, shininess);
         }
 
-        colorLinear = ambientColor + lambertian * diffuseColor * difint + specular * specColor * specint;
+        vec3 colorLinear = ambientColor + lambertian * diffuseColor * difint + specular * specColor * specint;
     }
-
-    else
-    {
+    else{
         float view_norm_angle = 0.0;
+
+        vec3 colorLinear;
 
         vec3 viewDir_to_Sun = normalize(-pass_vertPos);
         vec3 halfDir = normalize(lightDir + viewDir_to_Sun);

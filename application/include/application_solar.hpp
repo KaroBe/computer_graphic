@@ -68,6 +68,8 @@ class ApplicationSolar : public Application {
   std::vector<satellite> all_satellites;
   std::vector<float> all_stars;
   std::vector<float> all_orbits;
+
+  GLfloat m_shading_method = GLfloat(0.0f);
 };
 
 #endif
