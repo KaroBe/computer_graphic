@@ -61,6 +61,7 @@ class ApplicationSolar : public Application {
   model_object planet_object;
   model_object star_object;
   model_object orbit_object;
+  texture_object planet_texture;
 
 
   //stores the planets/satellites/stars to render

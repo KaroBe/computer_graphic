@@ -612,6 +612,19 @@ void ApplicationSolar::initializeOrbits()
   orbit_object.num_elements = GLsizei(all_orbits.size()/3);
 }
 
+void ApplicationSolar::initializeTextures()
+{
+  auto pix_dat = texture_loader::file(m_resource_path+ "textures/earth"); 
+
+
+  glActiveTexture(GL_TEXTURE0);
+  glGenTextures(1, &planet_texture.handle);
+  glBindTexture(GL_TEXTURE_2D, planet_texture.handle);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexImage2D(GL_TEXTURE_2D, 0, pix_dat.channels, pix_dat.width, pix_dat.height, 0, pix_dat.channels, pix_dat.channeltype, pix_dat.ptr());
+}
+
 
 ApplicationSolar::~ApplicationSolar()
 {
