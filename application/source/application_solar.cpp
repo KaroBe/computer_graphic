@@ -183,7 +183,7 @@ void ApplicationSolar::fillPlanets()
   planet sonne(10.0f, 0.0f, 0.0f); //Sun has to be initialized first for stuff to work
   planet merkur(0.6f, 0.48f, 15.0f);
   planet venus(2.5f, 0.35f, 22.0f);
-  planet erde(2.5f, 0.30f, 28.0f);
+  planet erde(10.0f, 0.30f, 28.0f);
   satellite mond(erde, 0.2f, 0.5f, 3.2f);
   planet mars(0.6f, 0.24f, 35.0f);
   planet jupiter(4.0f, 0.13f, 45.0f);
@@ -266,7 +266,7 @@ void ApplicationSolar::upload_planet_transforms(planet const& p) const
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, planet_texture.handle);
     int color_sampler_location = glGetUniformLocation(m_shaders.at("planet").handle, "ColorTex");
-    glUniform1i(m_shaders.at("planet").u_locs.at("ColorTex"), 0);
+    glUniform1i(color_sampler_location, 0);
 
 
     // bind the VAO to draw
@@ -638,7 +638,11 @@ void ApplicationSolar::initializeTextures()
   glBindTexture(GL_TEXTURE_2D, planet_texture.handle);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
   glTexImage2D(GL_TEXTURE_2D, 0, pix_dat.channels, pix_dat.width, pix_dat.height, 0, pix_dat.channels, pix_dat.channel_type, pix_dat.ptr());
+  glGenerateTextureMipmap(planet_texture.handle);
 }
 
 
