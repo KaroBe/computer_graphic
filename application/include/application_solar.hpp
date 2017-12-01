@@ -51,6 +51,7 @@ class ApplicationSolar : public Application {
   void initializeGeometry();
   void initializeStars();
   void initializeOrbits();
+  void initializeTextures();
   void updateView();
   void fillOrbits();
   void fillStars();

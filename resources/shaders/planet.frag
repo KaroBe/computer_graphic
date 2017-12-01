@@ -5,6 +5,7 @@ in vec3 pass_WorldNormal_view;
 in vec3 pass_vertPos;
 in vec3 pass_vertPos_view;
 in float pass_ShadingMethod;
+in vec4 color;
 
 out vec4 out_Color;
 
@@ -80,7 +81,7 @@ void main()
         if(abs(view_norm_angle) < 0.3)
         {
             //To generate cel outlines
-            colorLinear= vec3(1.0,1.0,0.0);
+            colorLinear = vec3(1.0,1.0,0.0);
         }
 
         else
@@ -88,5 +89,6 @@ void main()
             colorLinear = ambientColor + lambertian * diffuseColor * difint + specular * specColor * specint;
         }
     }
-    out_Color = vec4(colorLinear, 1.0);
+    //out_Color = vec4(colorLinear, 1.0);
+    out_Color = color;
 }

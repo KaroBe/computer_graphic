@@ -4,6 +4,7 @@
 #include "utils.hpp"
 #include "shader_loader.hpp"
 #include "model_loader.hpp"
+#include "texture_loader.hpp"
 
 #include <glbinding/gl/gl.h>
 // use gl definitions from glbinding 
@@ -34,6 +35,7 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
   initializeOrbits();
   initializeGeometry();
   initializeStars();
+  initializeTextures();
 
   initializeShaderPrograms();
 }
@@ -259,6 +261,13 @@ void ApplicationSolar::upload_planet_transforms(planet const& p) const
     glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
     glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("NormalMatrix"),
                     1, GL_FALSE, glm::value_ptr(normal_matrix));
+    
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, planet_texture.handle);
+    int color_sampler_location = glGetUniformLocation(m_shaders.at("planet").handle, "ColorTex");
+    glUniform1i(m_shaders.at("planet").u_locs.at("ColorTex"), 0);
+
 
     // bind the VAO to draw
     glBindVertexArray(planet_object.vertex_AO);
@@ -468,6 +477,7 @@ void ApplicationSolar::initializeShaderPrograms()
   m_shaders.at("sun").u_locs["ModelMatrix"] = -1;
   m_shaders.at("sun").u_locs["ViewMatrix"] = -1;
   m_shaders.at("sun").u_locs["ProjectionMatrix"] = -1;
+  m_shaders.at("sun").u_locs["ColorTex"] = -1;
 
   m_shaders.emplace("planet", shader_program{m_resource_path + "shaders/planet.vert",
                                            m_resource_path + "shaders/planet.frag"});
@@ -477,6 +487,7 @@ void ApplicationSolar::initializeShaderPrograms()
   m_shaders.at("planet").u_locs["ViewMatrix"] = -1;
   m_shaders.at("planet").u_locs["ProjectionMatrix"] = -1;
   m_shaders.at("planet").u_locs["ShadingMethod"] = -1;
+  m_shaders.at("planet").u_locs["ColorTex"] = -1;
   
 
   m_shaders.emplace("star", 
@@ -503,7 +514,7 @@ void ApplicationSolar::initializeGeometry()
 {
   //+++++++++++++++++++++++PlANETS++++++++++++++++++++
 
-  model planet_model = model_loader::obj(m_resource_path + "models/sphere.obj", model::NORMAL);
+  model planet_model = model_loader::obj(m_resource_path + "models/sphere.obj", model::NORMAL | model::TEXCOORD);
 
   // generate vertex array object
   glGenVertexArrays(1, &planet_object.vertex_AO);
@@ -525,6 +536,11 @@ void ApplicationSolar::initializeGeometry()
   glEnableVertexAttribArray(1);
   // second attribute is 3 floats with no offset & stride
   glVertexAttribPointer(1, model::NORMAL.components, model::NORMAL.type, GL_FALSE, planet_model.vertex_bytes, planet_model.offsets[model::NORMAL]);
+
+
+  glEnableVertexAttribArray(2);
+  // second attribute is 3 floats with no offset & stride
+  glVertexAttribPointer(2, model::TEXCOORD.components, model::TEXCOORD.type, GL_FALSE, planet_model.vertex_bytes, planet_model.offsets[model::TEXCOORD]);
 
    // generate generic buffer
   glGenBuffers(1, &planet_object.element_BO);
@@ -614,15 +630,15 @@ void ApplicationSolar::initializeOrbits()
 
 void ApplicationSolar::initializeTextures()
 {
-  auto pix_dat = texture_loader::file(m_resource_path+ "textures/earth"); 
-
+  std::string path = m_resource_path + "textures/earth.png";
+  pixel_data pix_dat = texture_loader::file(path); 
 
   glActiveTexture(GL_TEXTURE0);
   glGenTextures(1, &planet_texture.handle);
   glBindTexture(GL_TEXTURE_2D, planet_texture.handle);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, pix_dat.channels, pix_dat.width, pix_dat.height, 0, pix_dat.channels, pix_dat.channeltype, pix_dat.ptr());
+  glTexImage2D(GL_TEXTURE_2D, 0, pix_dat.channels, pix_dat.width, pix_dat.height, 0, pix_dat.channels, pix_dat.channel_type, pix_dat.ptr());
 }
 
 
@@ -639,6 +655,10 @@ ApplicationSolar::~ApplicationSolar()
   glDeleteBuffers(1, &orbit_object.vertex_BO);
   glDeleteBuffers(1, &orbit_object.element_BO);
   glDeleteVertexArrays(1, &orbit_object.vertex_AO);
+/*
+  glDeleteBuffers(1, &orbit_object.vertex_BO);
+  glDeleteBuffers(1, &orbit_object.element_BO);
+  glDeleteVertexArrays(1, &orbit_object.vertex_AO);*/
 }
 
 // exe entry point

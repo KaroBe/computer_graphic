@@ -4,18 +4,21 @@
 // vertex attributes of VAO
 layout(location = 0) in vec3 in_Position;
 layout(location = 1) in vec3 in_Normal;
+layout(location = 2) in vec2 in_TexCoord;
 
 //Matrix Uniforms as specified with glUniformMatrix4fv
 uniform mat4 ModelMatrix;
 uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
 uniform float ShadingMethod;
+uniform sampler2D ColorTex;
 
 out vec3 pass_WorldNormal;
 out vec3 pass_WorldNormal_view;
 out vec3 pass_vertPos;
 out vec3 pass_vertPos_view;
 out float pass_ShadingMethod;
+out vec4 color;
 
 void main(void)
 {
@@ -30,4 +33,6 @@ void main(void)
 	pass_WorldNormal_view = (ViewMatrix * ModelMatrix * vec4(in_Normal, 0.0)).xyz;
 
 	pass_ShadingMethod = ShadingMethod;
+
+	color = texture(ColorTex, in_TexCoord);
 }

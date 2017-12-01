@@ -40,7 +40,7 @@ struct pixel_data {
 
   // channel format
   GLenum channels; 
-  // pixel format
+  // pixel format 
   GLenum channel_type; 
 };
 
