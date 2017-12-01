@@ -11,14 +11,13 @@ uniform mat4 ModelMatrix;
 uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
 uniform float ShadingMethod;
-uniform sampler2D ColorTex;
 
 out vec3 pass_WorldNormal;
 out vec3 pass_WorldNormal_view;
 out vec3 pass_vertPos;
 out vec3 pass_vertPos_view;
 out float pass_ShadingMethod;
-out vec4 color;
+out vec2 pass_TexCoord;
 
 void main(void)
 {
@@ -34,5 +33,5 @@ void main(void)
 
 	pass_ShadingMethod = ShadingMethod;
 
-	color = texture(ColorTex, in_TexCoord);
+	pass_TexCoord = in_TexCoord;
 }

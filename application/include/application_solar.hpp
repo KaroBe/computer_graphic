@@ -36,7 +36,7 @@ class ApplicationSolar : public Application {
   void mouseCallback(double pos_x, double pos_y);
 
   //draws the given planet
-  void upload_planet_transforms(planet const& p) const;
+  void upload_planet_transforms(planet const& p, int k) const;
   //overloaded function to draw the satellits(moons)
   void upload_planet_transforms(satellite const& p) const;
   void upload_stars() const;
@@ -62,7 +62,9 @@ class ApplicationSolar : public Application {
   model_object planet_object;
   model_object star_object;
   model_object orbit_object;
-  texture_object planet_texture;
+
+  std::vector<texture_object> planet_texture;
+
 
 
   //stores the planets/satellites/stars to render

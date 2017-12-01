@@ -5,7 +5,8 @@ in vec3 pass_WorldNormal_view;
 in vec3 pass_vertPos;
 in vec3 pass_vertPos_view;
 in float pass_ShadingMethod;
-in vec4 color;
+in vec2 pass_TexCoord;
+uniform sampler2D ColorTex;
 
 out vec4 out_Color;
 
@@ -13,10 +14,10 @@ out vec4 out_Color;
 const vec3 sunPosition = vec3(0.0, 0.0, 0.0);
 
 //indirect light incoming 
-const vec3 ambientColor = vec3(0.0005, 0.0005, 0.0005);
+vec3 ambientColor = vec3(texture(ColorTex, pass_TexCoord))*0.1;
 
 //diffusely reflected light
-const vec3 diffuseColor = vec3(1.0, 1.0, 1.0);
+vec3 diffuseColor = vec3(texture(ColorTex, pass_TexCoord));
 
 //Reflection of Light to viewer
 const vec3 specColor = vec3(1.0, 1.0, 1.0);
@@ -89,6 +90,6 @@ void main()
             colorLinear = ambientColor + lambertian * diffuseColor * difint + specular * specColor * specint;
         }
     }
-    //out_Color = vec4(colorLinear, 1.0);
-    out_Color = color;
+    out_Color = vec4(colorLinear, 1.0);
+   
 }
