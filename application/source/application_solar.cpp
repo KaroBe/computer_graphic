@@ -281,6 +281,26 @@ void ApplicationSolar::upload_planet_transforms(planet const& p, int k) const
   }
 }
 
+void ApplicationSolar::upload_starsphere() const
+{
+  //calcs the matrices of the planets    nur texturkoordinaton / Projection 
+  glUseProgram(m_shaders.at("skysphere").handle);
+
+  //extra matrix for normal transformation to keep them orthogonal to surface
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, planet_texture[0].handle);
+  int color_sampler_location = glGetUniformLocation(m_shaders.at("skysphere").handle, "ColorTex");
+  glUniform1i(color_sampler_location, 0);
+
+
+  // bind the VAO to draw
+  glBindVertexArray(planet_object.vertex_AO);
+
+  // draw bound vertex array using bound shader
+  glDrawElements(planet_object.draw_mode, planet_object.num_elements, model::INDEX.type, NULL);
+}
+
 
 void ApplicationSolar::upload_stars() const
 {
@@ -325,6 +345,13 @@ void ApplicationSolar::upload_orbits(satellite const& p) const
 
 void ApplicationSolar::render() const
 {
+  
+
+  glDisable(GL_DEPTH_TEST);
+  upload_starsphere();
+  glEnable(GL_DEPTH_TEST);
+
+
   for (unsigned int i = 0; i < all_planets.size(); i++)
   {
     upload_planet_transforms(all_planets[i], i);
@@ -354,6 +381,11 @@ void ApplicationSolar::updateView()
   glUniform1f(m_shaders.at("planet").u_locs.at("ShadingMethod"), m_shading_method);
 
 
+  glUseProgram(m_shaders.at("skysphere").handle);
+  glUniformMatrix4fv(m_shaders.at("skysphere").u_locs.at("ViewMatrix"),
+                     1, GL_FALSE, glm::value_ptr(view_matrix));
+
+
   glUseProgram(m_shaders.at("star").handle);
   glUniformMatrix4fv(m_shaders.at("star").u_locs.at("ViewMatrix"),
                      1, GL_FALSE, glm::value_ptr(view_matrix));
@@ -373,6 +405,10 @@ void ApplicationSolar::updateProjection()
 
   glUseProgram(m_shaders.at("planet").handle);
   glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("ProjectionMatrix"),
+                     1, GL_FALSE, glm::value_ptr(m_view_projection));
+
+  glUseProgram(m_shaders.at("skysphere").handle);
+  glUniformMatrix4fv(m_shaders.at("skysphere").u_locs.at("ProjectionMatrix"),
                      1, GL_FALSE, glm::value_ptr(m_view_projection));
 
   glUseProgram(m_shaders.at("star").handle);
@@ -492,6 +528,14 @@ void ApplicationSolar::initializeShaderPrograms()
   m_shaders.at("planet").u_locs["ProjectionMatrix"] = -1;
   m_shaders.at("planet").u_locs["ShadingMethod"] = -1;
   m_shaders.at("planet").u_locs["ColorTex"] = -1;
+
+
+  m_shaders.emplace("skysphere", shader_program{m_resource_path + "shaders/skysphere.vert",
+                                           m_resource_path + "shaders/skysphere.frag"});
+  // request uniform locations for shader program
+  m_shaders.at("skysphere").u_locs["ProjectionMatrix"] = -1;
+  m_shaders.at("skysphere").u_locs["ViewMatrix"] = -1;
+  m_shaders.at("skysphere").u_locs["ColorTex"] = -1;
   
 
   m_shaders.emplace("star", 

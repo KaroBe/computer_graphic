@@ -40,6 +40,7 @@ class ApplicationSolar : public Application {
   //overloaded function to draw the satellits(moons)
   void upload_planet_transforms(satellite const& p) const;
   void upload_stars() const;
+  void upload_starsphere() const;
   void upload_orbits(planet const& p) const;
   void upload_orbits(satellite const& p) const;
 
