@@ -159,7 +159,7 @@ void ApplicationSolar::fillStars()
     //3 Colour Values
     else
     {
-      all_stars.insert(std::end(all_stars), static_cast <float> (rand()) / static_cast <float> (RAND_MAX));    
+      all_stars.insert(std::end(all_stars),1);    
     }
   }
 }
@@ -222,6 +222,11 @@ void ApplicationSolar::upload_planet_transforms(satellite const& p) const
                      1, GL_FALSE, glm::value_ptr(model_matrix));
 
 
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, planet_texture[10].handle);
+  int color_sampler_location = glGetUniformLocation(m_shaders.at("planet").handle, "ColorTex");
+  glUniform1i(color_sampler_location, 0);
+
   // extra matrix for normal transformation to keep them orthogonal to surface
   glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
   glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("NormalMatrix"),
@@ -247,6 +252,12 @@ void ApplicationSolar::upload_planet_transforms(planet const& p, int k) const
     glUseProgram(m_shaders.at("sun").handle);
     glUniformMatrix4fv(m_shaders.at("sun").u_locs.at("ModelMatrix"),
                      1, GL_FALSE, glm::value_ptr(model_matrix));
+
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, planet_texture[10].handle);
+    int color_sampler_location = glGetUniformLocation(m_shaders.at("planet").handle, "ColorTex");
+    glUniform1i(color_sampler_location, 0);
 
     // bind the VAO to draw
     glBindVertexArray(planet_object.vertex_AO);
@@ -511,8 +522,8 @@ void ApplicationSolar::mouseCallback(double pos_x, double pos_y)
 void ApplicationSolar::initializeShaderPrograms()
 {
  // store shader program objects in container
-  m_shaders.emplace("sun", shader_program{m_resource_path + "shaders/simple.vert",
-                                           m_resource_path + "shaders/simple.frag"});
+  m_shaders.emplace("sun", shader_program{m_resource_path + "shaders/sun.vert",
+                                           m_resource_path + "shaders/sun.frag"});
   // request uniform locations for shader program
   m_shaders.at("sun").u_locs["ModelMatrix"] = -1;
   m_shaders.at("sun").u_locs["ViewMatrix"] = -1;
@@ -678,7 +689,7 @@ void ApplicationSolar::initializeOrbits()
 
 void ApplicationSolar::initializeTextures()
 { 
-  for (unsigned int i = 0; i < 10; ++i)
+  for (unsigned int i = 0; i <= 10; ++i)
   {
     std::string path = m_resource_path + "textures/" + std::to_string(i) + ".png";
     pixel_data pix_dat = texture_loader::file(path); 
