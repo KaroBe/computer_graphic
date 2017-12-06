@@ -12,17 +12,22 @@ void generate_normals(tinyobj::mesh_t& model);
 
 std::vector<glm::fvec3> generate_tangents(tinyobj::mesh_t const& model);
 
-model obj(std::string const& name, model::attrib_flag_t import_attribs){
+model obj(std::string const& name, model::attrib_flag_t import_attribs)
+{
   std::vector<tinyobj::shape_t> shapes;
   std::vector<tinyobj::material_t> materials;
 
   std::string err = tinyobj::LoadObj(shapes, materials, name.c_str());
 
-  if (!err.empty()) {
-    if (err[0] == 'W' && err[1] == 'A' && err[2] == 'R') {
+  if (!err.empty())
+  {
+    if (err[0] == 'W' && err[1] == 'A' && err[2] == 'R')
+    {
       std::cerr << "tinyobjloader: " << err << std::endl;    
     }
-    else {
+
+    else
+    {
       throw std::logic_error("tinyobjloader: " + err);    
     }
   }
@@ -34,13 +39,16 @@ model obj(std::string const& name, model::attrib_flag_t import_attribs){
 
   unsigned vertex_offset = 0;
 
-  for (auto& shape : shapes) {
+  for (auto& shape : shapes)
+  {
     tinyobj::mesh_t& curr_mesh = shape.mesh;
     // prevent MSVC warning due to Win BOOL implementation
     bool has_normals = (import_attribs & model::NORMAL) != 0;
-    if(has_normals) {
+    if(has_normals)
+    {
       // generate normals if necessary
-      if (curr_mesh.normals.empty()) {
+      if (curr_mesh.normals.empty())
+      {
         generate_normals(curr_mesh);
       }
     }
@@ -92,7 +100,8 @@ model obj(std::string const& name, model::attrib_flag_t import_attribs){
     }
 
     // add triangles
-    for (unsigned i = 0; i < curr_mesh.indices.size(); ++i) {
+    for (unsigned i = 0; i < curr_mesh.indices.size(); ++i)
+    {
       triangles.push_back(vertex_offset + curr_mesh.indices[i]);
     }
 
@@ -102,24 +111,28 @@ model obj(std::string const& name, model::attrib_flag_t import_attribs){
   return model{vertex_data, attributes, triangles};
 }
 
-void generate_normals(tinyobj::mesh_t& model) {
+void generate_normals(tinyobj::mesh_t& model)
+{
   std::vector<glm::fvec3> positions(model.positions.size() / 3);
 
-  for (unsigned i = 0; i < model.positions.size(); i+=3) {
+  for (unsigned i = 0; i < model.positions.size(); i+=3)
+  {
     positions[i / 3] = glm::fvec3{model.positions[i], model.positions[i + 1], model.positions[i + 2]};
   }
-
   std::vector<glm::fvec3> normals(model.positions.size() / 3, glm::fvec3{0.0f});
-  for (unsigned i = 0; i < model.indices.size(); i+=3) {
+  
+  for (unsigned i = 0; i < model.indices.size(); i+=3)
+  {
     glm::fvec3 normal = glm::cross(positions[model.indices[i+1]] - positions[model.indices[i]], positions[model.indices[i+2]] - positions[model.indices[i]]);
 
     normals[model.indices[i]] += normal;
     normals[model.indices[i+1]] += normal;
     normals[model.indices[i+2]] += normal;
   }
-
   model.normals.reserve(model.positions.size());
-  for (unsigned i = 0; i < normals.size(); ++i) {
+  
+  for (unsigned i = 0; i < normals.size(); ++i)
+  {
     glm::fvec3 normal = glm::normalize(normals[i]);
     model.normals[i * 3] = normal[0];
     model.normals[i * 3 + 1] = normal[1];
@@ -127,7 +140,8 @@ void generate_normals(tinyobj::mesh_t& model) {
   }
 }
 
-std::vector<glm::fvec3> generate_tangents(tinyobj::mesh_t const& model) {
+std::vector<glm::fvec3> generate_tangents(tinyobj::mesh_t const& model)
+{
   // containers for vertex attributes
   std::vector<glm::fvec3> positions(model.positions.size() / 3);
   std::vector<glm::fvec3> normals(model.positions.size() / 3);
@@ -135,7 +149,8 @@ std::vector<glm::fvec3> generate_tangents(tinyobj::mesh_t const& model) {
   std::vector<glm::fvec3> tangents(model.positions.size() / 3, glm::fvec3{0.0f});
 
   // get vertex positions and texture coordinates from mesh_t
-  for (unsigned i = 0; i < model.positions.size(); i+=3) {
+  for (unsigned i = 0; i < model.positions.size(); i+=3)
+  {
     positions[i / 3] = glm::fvec3{model.positions[i],
                                  model.positions[i + 1],
                                  model.positions[i + 2]};
@@ -143,29 +158,47 @@ std::vector<glm::fvec3> generate_tangents(tinyobj::mesh_t const& model) {
                                  model.normals[i + 1],
                                  model.normals[i + 2]};
   }
-  for (unsigned i = 0; i < model.texcoords.size(); i+=2) {
+
+  for (unsigned i = 0; i < model.texcoords.size(); i+=2)
+  {
     texcoords[i / 2] = glm::fvec2{model.texcoords[i], model.texcoords[i + 1]};
   }
 
   // calculate tangent for triangles
-  for (unsigned i = 0; i < model.indices.size() / 3; i++) {
+  for (unsigned i = 0; i < model.indices.size() / 3; i++)
+  {
     // indices of vertices of this triangle
     unsigned indices[3] = {model.indices[i * 3],
                            model.indices[i * 3 + 1],
                            model.indices[i * 3 + 2]};
+
     // access an attribute of xth vert with vector access "attribute[indices[x]]"
-    
+    glm::fvec3 delta_p1 = positions[indices[1]] - positions[indices[0]];
+    glm::fvec3 delta_p2 = positions[indices[2]] - positions[indices[0]];
+
+    glm::fvec2 delta_u = texcoords[indices[1]] - texcoords[indices[0]];
+    glm::fvec2 delta_v = texcoords[indices[2]] - texcoords[indices[0]];
+
+    glm::fmat2 u_v_mat{delta_v.y, -delta_v.x, -delta_u.y, delta_u.x};
+    glm::fmat3x2 p_mat{delta_p1.x, delta_p1.y, delta_p1.z, delta_p2.x, delta_p2.y, delta_p2.z};
+    float faktor = 1.0f/(delta_u.x * delta_v.y - delta_u.y * delta_v.x);
+
+    glm::fmat3x2 t_b = faktor * u_v_mat * p_mat;
+
+    glm::fvec3 tangent = glm::fvec3(t_b[0][0], t_b[1][0], t_b[2][0]);
+
     // calculate tangent for the triangle and add it to the accumulation tangents of the adjacent vertices
-    // see generate_normals() for similar workflow 
+
+    tangents[indices[0]] += tangent;
+    tangents[indices[1]] += tangent;
+    tangents[indices[2]] += tangent;
   }
+
   // normalize and orthogonalize accumulated vertex tangents
   for (unsigned i = 0; i < tangents.size(); ++i) {
-    // implement orthogonalization and normalization here
+    glm::fvec3 norm_tangent = tangents[i] - normals[i] * glm::dot(normals[i], tangents[i]);
+    tangents[i] = normalize(norm_tangent);
   }
-
-  throw std::logic_error("Tangent creation not implemented yet");
-
   return tangents;
 }
-
 };

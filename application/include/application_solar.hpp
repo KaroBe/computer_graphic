@@ -65,6 +65,7 @@ class ApplicationSolar : public Application {
   model_object orbit_object;
 
   std::vector<texture_object> planet_texture;
+  std::vector<texture_object> normal_texture;
 
 
 

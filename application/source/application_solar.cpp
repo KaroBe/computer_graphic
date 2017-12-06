@@ -44,7 +44,7 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
 //Fill Stars vector with floats. This only happens once, so i guess all the if-cases are okay
 void ApplicationSolar::fillStars()
 {
-  for (int i = 0; i < 100000; i++)
+  for (int i = 0; i < 500; i++)
   { 
     //Random Values for Stars
     if (i % 4 == 0)
@@ -180,14 +180,16 @@ void ApplicationSolar::fillOrbits()
 //initializes our planets and satellites
 void ApplicationSolar::fillPlanets()
 {
-  texture_object t1,t2,t3,t4,t5,t6,t7,t8,t9,t10;
+  texture_object t0, t1,t2,t3,t4,t5,t6,t7,t8,t9,t10;
+  texture_object nt0, nt1,nt2,nt3,nt4,nt5,nt6,nt7,nt8,nt9,nt10;
 
-  planet_texture.insert(std::end(planet_texture), {t1,t2,t3,t4,t5,t6,t7,t8,t9,t10});
+  planet_texture.insert(std::end(planet_texture), {t0, t1,t2,t3,t4,t5,t6,t7,t8,t9,t10});
+  normal_texture.insert(std::end(normal_texture), {nt0, nt1,nt2,nt3,nt4,nt5,nt6,nt7,nt8,nt9,nt10});
 
   planet sonne(10.0f, 0.0f, 0.0f); //Sun has to be initialized first for stuff to work
   planet merkur(0.6f, 0.48f, 15.0f);
   planet venus(2.5f, 0.35f, 22.0f);
-  planet erde(3.0f, 0.30f, 28.0f);
+  planet erde(2.9f, 0.3f, 28.0f);
   satellite mond(erde, 0.2f, 0.5f, 3.2f);
   planet mars(0.6f, 0.24f, 35.0f);
   planet jupiter(4.0f, 0.13f, 45.0f);
@@ -196,7 +198,7 @@ void ApplicationSolar::fillPlanets()
   planet neptun(2.9f, 0.05f, 75.0f);
   //planet pluto(0.5f, 3.6f, 62.0f);
 
-  all_planets.insert(std::end(all_planets), {sonne, erde, merkur, venus, mars,
+  all_planets.insert(std::end(all_planets), {sonne, merkur, venus, erde, mars,
     jupiter,saturn, uranus, neptun});
 
   all_satellites.insert(std::end(all_satellites), {mond});
@@ -227,6 +229,10 @@ void ApplicationSolar::upload_planet_transforms(satellite const& p) const
   int color_sampler_location = glGetUniformLocation(m_shaders.at("planet").handle, "ColorTex");
   glUniform1i(color_sampler_location, 0);
 
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, normal_texture[10].handle);
+  glUniform1i(glGetUniformLocation(m_shaders.at("planet").handle, "NormalTex"), 1);
+
   // extra matrix for normal transformation to keep them orthogonal to surface
   glm::fmat4 normal_matrix = glm::inverseTranspose(glm::inverse(m_view_transform) * model_matrix);
   glUniformMatrix4fv(m_shaders.at("planet").u_locs.at("NormalMatrix"),
@@ -255,7 +261,7 @@ void ApplicationSolar::upload_planet_transforms(planet const& p, int k) const
 
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, planet_texture[10].handle);
+    glBindTexture(GL_TEXTURE_2D, planet_texture[k+1].handle);
     int color_sampler_location = glGetUniformLocation(m_shaders.at("planet").handle, "ColorTex");
     glUniform1i(color_sampler_location, 0);
 
@@ -282,6 +288,12 @@ void ApplicationSolar::upload_planet_transforms(planet const& p, int k) const
     glBindTexture(GL_TEXTURE_2D, planet_texture[k+1].handle);
     int color_sampler_location = glGetUniformLocation(m_shaders.at("planet").handle, "ColorTex");
     glUniform1i(color_sampler_location, 0);
+
+     // Bind our normal texture in Texture Unit 1
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, normal_texture[k+1].handle);
+    glUniform1i(glGetUniformLocation(m_shaders.at("planet").handle, "NormalTex"), 1);
+
 
 
     // bind the VAO to draw
@@ -539,6 +551,7 @@ void ApplicationSolar::initializeShaderPrograms()
   m_shaders.at("planet").u_locs["ProjectionMatrix"] = -1;
   m_shaders.at("planet").u_locs["ShadingMethod"] = -1;
   m_shaders.at("planet").u_locs["ColorTex"] = -1;
+  m_shaders.at("planet").u_locs["NormalTex"] = -1;
 
 
   m_shaders.emplace("skysphere", shader_program{m_resource_path + "shaders/skysphere.vert",
@@ -573,7 +586,7 @@ void ApplicationSolar::initializeGeometry()
 {
   //+++++++++++++++++++++++PlANETS++++++++++++++++++++
 
-  model planet_model = model_loader::obj(m_resource_path + "models/sphere.obj", model::NORMAL | model::TEXCOORD);
+  model planet_model = model_loader::obj(m_resource_path + "models/sphere.obj", model::NORMAL | model::TEXCOORD | model::TANGENT);
 
   // generate vertex array object
   glGenVertexArrays(1, &planet_object.vertex_AO);
@@ -600,6 +613,11 @@ void ApplicationSolar::initializeGeometry()
   glEnableVertexAttribArray(2);
   // second attribute is 3 floats with no offset & stride
   glVertexAttribPointer(2, model::TEXCOORD.components, model::TEXCOORD.type, GL_FALSE, planet_model.vertex_bytes, planet_model.offsets[model::TEXCOORD]);
+
+
+  glEnableVertexAttribArray(3);
+  // second attribute is 3 floats with no offset & stride
+  glVertexAttribPointer(3, model::TANGENT.components, model::TANGENT.type, GL_FALSE, planet_model.vertex_bytes, planet_model.offsets[model::TANGENT]);
 
    // generate generic buffer
   glGenBuffers(1, &planet_object.element_BO);
@@ -689,7 +707,7 @@ void ApplicationSolar::initializeOrbits()
 
 void ApplicationSolar::initializeTextures()
 { 
-  for (unsigned int i = 0; i <= 10; ++i)
+  for (unsigned int i = 0; i < 10; i++)
   {
     std::string path = m_resource_path + "textures/" + std::to_string(i) + ".png";
     pixel_data pix_dat = texture_loader::file(path); 
@@ -703,8 +721,20 @@ void ApplicationSolar::initializeTextures()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glTexImage2D(GL_TEXTURE_2D, 0, pix_dat.channels, pix_dat.width, pix_dat.height, 0, pix_dat.channels, pix_dat.channel_type, pix_dat.ptr());
-  }
 
+    std::string path_normals = m_resource_path + "normal_textures/" + std::to_string(i) + ".png";
+    pixel_data pix_dat_normal = texture_loader::file(path_normals); 
+
+    glActiveTexture(GL_TEXTURE1);
+    glGenTextures(1, &normal_texture[i].handle);
+    glBindTexture(GL_TEXTURE_2D, normal_texture[i].handle);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, pix_dat_normal.channels, pix_dat_normal.width, pix_dat_normal.height, 0, pix_dat_normal.channels, pix_dat_normal.channel_type, pix_dat_normal.ptr());
+  }
 }
 
 

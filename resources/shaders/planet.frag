@@ -6,7 +6,11 @@ in vec3 pass_vertPos;
 in vec3 pass_vertPos_view;
 in float pass_ShadingMethod;
 in vec2 pass_TexCoord;
+in vec3 pass_Tangent;
+
+
 uniform sampler2D ColorTex;
+uniform sampler2D NormalTex;
 
 out vec4 out_Color;
 
@@ -22,15 +26,20 @@ vec3 diffuseColor = vec3(texture(ColorTex, pass_TexCoord));
 //Reflection of Light to viewer
 const vec3 specColor = vec3(1.0, 1.0, 1.0);
 
-const float difint = 0.5;
-const float specint = 0.9;
+//
+vec3 norm_tex_color = vec3(texture(NormalTex, pass_TexCoord))* 2.0f - 1.0f;
+
+const float difint = 0.95;
+const float specint = 0.5;
 
 //Shininess, woooohoooo
-const float shininess = 100.0;
+const float shininess = 50.0;
 
 void main()
 {
-    vec3 normal = normalize(pass_WorldNormal);
+    vec3 bi_Tan = cross(pass_WorldNormal, pass_Tangent);
+    mat3 Tan = mat3(pass_Tangent, bi_Tan, pass_WorldNormal);
+    vec3 normal = normalize(Tan*norm_tex_color);
     vec3 normal_view = normalize(pass_WorldNormal_view);
     vec3 lightDir = normalize(sunPosition - pass_vertPos);
     vec3 colorLinear;
@@ -42,7 +51,7 @@ void main()
     if ( pass_ShadingMethod < 1.0)
     {
         //specular highlight decay
-        float specular = 0.0;
+        //float specular = 0.0;
 
         if(lambertian > 0.0){
             vec3 viewDir = normalize(-pass_vertPos);
