@@ -43,6 +43,7 @@ class ApplicationSolar : public Application {
   void upload_starsphere() const;
   void upload_orbits(planet const& p) const;
   void upload_orbits(satellite const& p) const;
+  void upload_quad() const;
 
   // calls upload_planet_transforms funct. for all planets/satellites
   void render() const;
@@ -53,7 +54,12 @@ class ApplicationSolar : public Application {
   void initializeStars();
   void initializeOrbits();
   void initializeTextures();
+  void initializeFramebuffer();
+  void initializeScreenQuad();
+
+
   void updateView();
+
   void fillOrbits();
   void fillStars();
   void fillPlanets();
@@ -67,13 +73,17 @@ class ApplicationSolar : public Application {
   std::vector<texture_object> planet_texture;
   std::vector<texture_object> normal_texture;
 
+  texture_object frame_buffer_texture;
+  texture_object frame_buffer_object;
 
+  model_object screen_quad_object;
 
   //stores the planets/satellites/stars to render
   std::vector<planet> all_planets;
   std::vector<satellite> all_satellites;
   std::vector<float> all_stars;
   std::vector<float> all_orbits;
+  std::vector<float> all_quads;
 
   GLfloat m_shading_method = GLfloat(0.0f);
 };

@@ -37,6 +37,8 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
   initializeStars();
   initializeTextures();
 
+  initializeFramebuffer();
+
   initializeShaderPrograms();
 }
 
@@ -208,7 +210,6 @@ void ApplicationSolar::fillPlanets()
 //calculates the matrices of the satellites according to the fathers matrices and draws the satellites
 void ApplicationSolar::upload_planet_transforms(satellite const& p) const
 {
-   // bind shader to upload uniforms
   glUseProgram(m_shaders.at("planet").handle);
 
   //calcs the matrices of the father planets
@@ -365,11 +366,24 @@ void ApplicationSolar::upload_orbits(satellite const& p) const
   glDrawArrays(orbit_object.draw_mode, 0, orbit_object.num_elements);
 }
 
+void ApplicationSolar::upload_quad() const{
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  glUseProgram(m_shaders.at("quad").handle);
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, frame_buffer_texture.handle);
+
+  int color_sampler_location = glGetUniformLocation(m_shaders.at("quad").handle, "ColorTex");
+  glUniform1i(color_sampler_location, 0);
+
+  glBindVertexArray(screen_quad_object.vertex_AO);
+
+  glDrawArrays(screen_quad_object.draw_mode, NULL, screen_quad_object.num_elements); 
+}
 
 void ApplicationSolar::render() const
 {
-  
-
   glDisable(GL_DEPTH_TEST);
   upload_starsphere();
   glEnable(GL_DEPTH_TEST);
@@ -386,6 +400,7 @@ void ApplicationSolar::render() const
     upload_orbits(all_satellites[i]);
   }
   upload_stars();
+  upload_quad();
 }
 
 
@@ -578,6 +593,15 @@ void ApplicationSolar::initializeShaderPrograms()
   m_shaders.at("orbit").u_locs["ModelMatrix"] = -1;
   m_shaders.at("orbit").u_locs["ViewMatrix"] = -1;
   m_shaders.at("orbit").u_locs["ProjectionMatrix"] = -1;
+
+
+  m_shaders.emplace("quad", shader_program{m_resource_path + "shaders/simple_quad.vert",
+                                           m_resource_path + "shaders/simple_quad.frag"});
+  m_shaders.at("quad").u_locs["ColorTex"] = -1;
+  m_shaders.at("quad").u_locs["greyscale"] = -1;
+  m_shaders.at("quad").u_locs["mirrored_v"] = -1;
+  m_shaders.at("quad").u_locs["mirrored_h"] = -1;
+  m_shaders.at("quad").u_locs["blur"] = -1;
 }
 
 
@@ -735,6 +759,65 @@ void ApplicationSolar::initializeTextures()
 
     glTexImage2D(GL_TEXTURE_2D, 0, pix_dat_normal.channels, pix_dat_normal.width, pix_dat_normal.height, 0, pix_dat_normal.channels, pix_dat_normal.channel_type, pix_dat_normal.ptr());
   }
+}
+
+void ApplicationSolar::initializeFramebuffer()
+{
+  glGenRenderbuffers(1, &frame_buffer_object.handle);
+  glBindRenderbuffer(GL_RENDERBUFFER, frame_buffer_object.handle);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, GLsizei(1920u), GLsizei(1080u));
+
+  glActiveTexture(GL_TEXTURE0);
+  glGenTextures(1, &frame_buffer_texture.handle);
+  glBindTexture(GL_TEXTURE_2D, frame_buffer_texture.handle);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, GLsizei(1920u), GLsizei(1080u), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+  glGenFramebuffers(1, &frame_buffer_object.handle);
+  glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_object.handle); 
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, frame_buffer_texture.handle, 0);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, frame_buffer_object.handle);
+
+  GLenum draw_buffers[1] = {GL_COLOR_ATTACHMENT0};
+  glDrawBuffers(1, draw_buffers);
+
+  GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  if(status != GL_FRAMEBUFFER_COMPLETE)
+    {
+      std::cout << "FRAMEBUFFER just didn`t" << std::endl;
+    }
+}
+
+// load screen quad
+void ApplicationSolar::initializeScreenQuad() {
+  all_quads = {
+    -1.0f, -1.0f, 0.0f,
+    1.0f, -1.0f, 0.0f,
+    -1.0f,  1.0f, 0.0f,
+    -1.0f,  1.0f, 0.0f,
+    1.0f, -1.0f, 0.0f,
+    1.0f,  1.0f, 0.0f
+  };
+
+  model screen_quad_model = {all_quads, model::TEXCOORD | model::POSITION};
+
+  glGenVertexArrays(1, &screen_quad_object.vertex_AO);
+  glBindVertexArray(screen_quad_object.vertex_AO);
+
+  glGenBuffers(1, &screen_quad_object.vertex_BO);
+  glBindBuffer(GL_ARRAY_BUFFER, screen_quad_object.vertex_BO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * screen_quad_model.data.size(), screen_quad_model.data.data(), GL_STATIC_DRAW);  
+
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, model::POSITION.components, model::POSITION.type, GL_FALSE, screen_quad_model.vertex_bytes, screen_quad_model.offsets[model::POSITION]);
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, model::TEXCOORD.components, model::TEXCOORD.type, GL_FALSE, screen_quad_model.vertex_bytes, screen_quad_model.offsets[model::TEXCOORD]);
+
+  screen_quad_object.draw_mode = GL_TRIANGLE_STRIP;
+  screen_quad_object.num_elements = GLsizei(screen_quad_model.data.size()/5);
+
+  glBindVertexArray(0); 
 }
 
 
