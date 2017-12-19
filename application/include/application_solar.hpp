@@ -87,6 +87,8 @@ class ApplicationSolar : public Application {
   std::vector<float> all_quads;
 
   GLfloat m_shading_method = GLfloat(0.0f);
+  bool m_h_mirrored = bool(false);
+  bool m_v_mirrored = bool(false);
 };
 
 #endif

@@ -32,12 +32,13 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
   fillOrbits();
   fillPlanets();
   
+  initializeScreenQuad();
+  initializeFramebuffer();
+
   initializeOrbits();
   initializeGeometry();
   initializeStars();
   initializeTextures();
-
-  initializeFramebuffer();
 
   initializeShaderPrograms();
 }
@@ -379,11 +380,14 @@ void ApplicationSolar::upload_quad() const{
 
   glBindVertexArray(screen_quad_object.vertex_AO);
 
-  glDrawArrays(screen_quad_object.draw_mode, NULL, screen_quad_object.num_elements); 
+  glDrawArrays(screen_quad_object.draw_mode, 0, screen_quad_object.num_elements); 
 }
 
 void ApplicationSolar::render() const
 {
+  glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_object.handle);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
   glDisable(GL_DEPTH_TEST);
   upload_starsphere();
   glEnable(GL_DEPTH_TEST);
@@ -399,6 +403,7 @@ void ApplicationSolar::render() const
     upload_planet_transforms(all_satellites[i]);
     upload_orbits(all_satellites[i]);
   }
+
   upload_stars();
   upload_quad();
 }
@@ -431,6 +436,10 @@ void ApplicationSolar::updateView()
   glUseProgram(m_shaders.at("orbit").handle);
   glUniformMatrix4fv(m_shaders.at("orbit").u_locs.at("ViewMatrix"),
                      1, GL_FALSE, glm::value_ptr(view_matrix));
+
+  glUseProgram(m_shaders.at("simple_quad").handle);
+  glUniform1f(m_shaders.at("simple_quad").u_locs.at("H_Mirrored"), m_h_mirrored);
+  glUniform1f(m_shaders.at("simple_quad").u_locs.at("V_Mirrored"), m_v_mirrored);
 }
 
 
@@ -468,6 +477,7 @@ void ApplicationSolar::uploadUniforms()
   glUseProgram(m_shaders.at("sun").handle);
   glUseProgram(m_shaders.at("planet").handle);
   glUseProgram(m_shaders.at("orbit").handle);
+  glUseProgram(m_shaders.at("simple_quad").handle);
   
   updateView();
   updateProjection();
@@ -530,6 +540,18 @@ void ApplicationSolar::keyCallback(int key, int scancode, int action, int mods)
   else if (key == GLFW_KEY_2)
   {
     m_shading_method = 1.0f;//glUniform1f(m_shaders.at("planet").u_locs.at("ShadingMethod"), GLfloat(1.0f));
+    updateView();
+  }
+
+  else if (key == GLFW_KEY_8 && action == GLFW_PRESS)
+  {
+    m_h_mirrored == false ? m_h_mirrored = true : m_h_mirrored = false;
+    updateView();
+  }
+
+  else if (key == GLFW_KEY_9 && action == GLFW_PRESS)
+  {
+    m_v_mirrored == false ? m_v_mirrored = true : m_v_mirrored = false;
     updateView();
   }
 
@@ -599,8 +621,8 @@ void ApplicationSolar::initializeShaderPrograms()
                                            m_resource_path + "shaders/simple_quad.frag"});
   m_shaders.at("simple_quad").u_locs["ColorTex"] = -1;
   m_shaders.at("simple_quad").u_locs["greyscale"] = -1;
-  m_shaders.at("simple_quad").u_locs["mirrored_v"] = -1;
-  m_shaders.at("simple_quad").u_locs["mirrored_h"] = -1;
+  m_shaders.at("simple_quad").u_locs["V_Mirrored"] = -1;
+  m_shaders.at("simple_quad").u_locs["H_Mirrored"] = -1;
   m_shaders.at("simple_quad").u_locs["blur"] = -1;
 }
 
@@ -791,14 +813,13 @@ void ApplicationSolar::initializeFramebuffer()
 
 // load screen quad
 void ApplicationSolar::initializeScreenQuad() {
-  all_quads = {
+  all_quads.insert(std::end(all_quads),{
     -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
     1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-    -1.0f,  1.0f, 0.0f,  1.0f, 1.0f,
-    -1.0f,  1.0f, 0.0f,  0.0f, 1.0f
-  };
+    -1.0f, 1.0f, 0.0f,  0.0f, 1.0f,
+    1.0f,  1.0f, 0.0f,  1.0f, 1.0f});
 
-  model screen_quad_model = {all_quads, model::TEXCOORD | model::POSITION};
+  model screen_quad_model = {all_quads, model::POSITION | model::TEXCOORD, {1}};
 
   glGenVertexArrays(1, &screen_quad_object.vertex_AO);
   glBindVertexArray(screen_quad_object.vertex_AO);
