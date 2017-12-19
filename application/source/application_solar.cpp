@@ -369,12 +369,12 @@ void ApplicationSolar::upload_orbits(satellite const& p) const
 void ApplicationSolar::upload_quad() const{
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-  glUseProgram(m_shaders.at("quad").handle);
+  glUseProgram(m_shaders.at("simple_quad").handle);
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, frame_buffer_texture.handle);
 
-  int color_sampler_location = glGetUniformLocation(m_shaders.at("quad").handle, "ColorTex");
+  int color_sampler_location = glGetUniformLocation(m_shaders.at("simple_quad").handle, "ColorTex");
   glUniform1i(color_sampler_location, 0);
 
   glBindVertexArray(screen_quad_object.vertex_AO);
@@ -595,13 +595,13 @@ void ApplicationSolar::initializeShaderPrograms()
   m_shaders.at("orbit").u_locs["ProjectionMatrix"] = -1;
 
 
-  m_shaders.emplace("quad", shader_program{m_resource_path + "shaders/simple_quad.vert",
+  m_shaders.emplace("simple_quad", shader_program{m_resource_path + "shaders/simple_quad.vert",
                                            m_resource_path + "shaders/simple_quad.frag"});
-  m_shaders.at("quad").u_locs["ColorTex"] = -1;
-  m_shaders.at("quad").u_locs["greyscale"] = -1;
-  m_shaders.at("quad").u_locs["mirrored_v"] = -1;
-  m_shaders.at("quad").u_locs["mirrored_h"] = -1;
-  m_shaders.at("quad").u_locs["blur"] = -1;
+  m_shaders.at("simple_quad").u_locs["ColorTex"] = -1;
+  m_shaders.at("simple_quad").u_locs["greyscale"] = -1;
+  m_shaders.at("simple_quad").u_locs["mirrored_v"] = -1;
+  m_shaders.at("simple_quad").u_locs["mirrored_h"] = -1;
+  m_shaders.at("simple_quad").u_locs["blur"] = -1;
 }
 
 
@@ -763,8 +763,8 @@ void ApplicationSolar::initializeTextures()
 
 void ApplicationSolar::initializeFramebuffer()
 {
-  glGenRenderbuffers(1, &frame_buffer_object.handle);
-  glBindRenderbuffer(GL_RENDERBUFFER, frame_buffer_object.handle);
+  glGenRenderbuffers(1, &render_buffer_object.handle);
+  glBindRenderbuffer(GL_RENDERBUFFER, render_buffer_object.handle);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, GLsizei(1920u), GLsizei(1080u));
 
   glActiveTexture(GL_TEXTURE0);
@@ -777,7 +777,7 @@ void ApplicationSolar::initializeFramebuffer()
   glGenFramebuffers(1, &frame_buffer_object.handle);
   glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_object.handle); 
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, frame_buffer_texture.handle, 0);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, frame_buffer_object.handle);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, render_buffer_object.handle);
 
   GLenum draw_buffers[1] = {GL_COLOR_ATTACHMENT0};
   glDrawBuffers(1, draw_buffers);
@@ -792,12 +792,10 @@ void ApplicationSolar::initializeFramebuffer()
 // load screen quad
 void ApplicationSolar::initializeScreenQuad() {
   all_quads = {
-    -1.0f, -1.0f, 0.0f,
-    1.0f, -1.0f, 0.0f,
-    -1.0f,  1.0f, 0.0f,
-    -1.0f,  1.0f, 0.0f,
-    1.0f, -1.0f, 0.0f,
-    1.0f,  1.0f, 0.0f
+    -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+    1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    -1.0f,  1.0f, 0.0f,  1.0f, 1.0f,
+    -1.0f,  1.0f, 0.0f,  0.0f, 1.0f
   };
 
   model screen_quad_model = {all_quads, model::TEXCOORD | model::POSITION};
@@ -834,10 +832,9 @@ ApplicationSolar::~ApplicationSolar()
   glDeleteBuffers(1, &orbit_object.vertex_BO);
   glDeleteBuffers(1, &orbit_object.element_BO);
   glDeleteVertexArrays(1, &orbit_object.vertex_AO);
-/*
-  glDeleteBuffers(1, &orbit_object.vertex_BO);
-  glDeleteBuffers(1, &orbit_object.element_BO);
-  glDeleteVertexArrays(1, &orbit_object.vertex_AO);*/
+
+  //glDeleteFramebuffers(1, &frame_buffer_object);
+
 }
 
 // exe entry point

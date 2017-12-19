@@ -75,6 +75,7 @@ class ApplicationSolar : public Application {
 
   texture_object frame_buffer_texture;
   texture_object frame_buffer_object;
+  texture_object render_buffer_object;
 
   model_object screen_quad_object;
 
