@@ -89,6 +89,9 @@ class ApplicationSolar : public Application {
   GLfloat m_shading_method = GLfloat(0.0f);
   bool m_h_mirrored = bool(false);
   bool m_v_mirrored = bool(false);
+  bool m_grayscale = bool(false);
+  bool m_blur = bool(false);
+  bool m_sobel = bool(true);
 };
 
 #endif

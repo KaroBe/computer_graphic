@@ -13,13 +13,20 @@ void main()
 {
 	vec2 TexCoord = in_TexCoord;
 
+	// mirror horizontal
 	if(H_Mirrored == 1.0f){
-		if(in_TexCoord.y == 1) 	{TexCoord.y = 0.0;}
-		else 					{TexCoord.y = 1.0;}
+		if(in_TexCoord.y == 1) 
+			{TexCoord.y = 0.0;}
+		else 
+			{TexCoord.y = 1.0;}
 	}
+
+	// mirror vertical
 	if(V_Mirrored == 1.0f){
-		if(in_TexCoord.x == 1) 	{TexCoord.x = 0.0;}
-		else 					{TexCoord.x = 1.0;}
+		if(in_TexCoord.x == 1) 	
+			{TexCoord.x = 0.0;}
+		else 					
+			{TexCoord.x = 1.0;}
 	}
 
 	gl_Position = vec4(in_Position, 1.0);

@@ -440,6 +440,9 @@ void ApplicationSolar::updateView()
   glUseProgram(m_shaders.at("simple_quad").handle);
   glUniform1f(m_shaders.at("simple_quad").u_locs.at("H_Mirrored"), m_h_mirrored);
   glUniform1f(m_shaders.at("simple_quad").u_locs.at("V_Mirrored"), m_v_mirrored);
+  glUniform1f(m_shaders.at("simple_quad").u_locs.at("GrayScale"), m_grayscale);
+  glUniform1f(m_shaders.at("simple_quad").u_locs.at("Blur"), m_blur);
+  glUniform1f(m_shaders.at("simple_quad").u_locs.at("Sobel"), m_sobel);
 }
 
 
@@ -543,15 +546,38 @@ void ApplicationSolar::keyCallback(int key, int scancode, int action, int mods)
     updateView();
   }
 
+  // grayscale
+  else if (key == GLFW_KEY_6 && action == GLFW_PRESS)
+  {
+    m_sobel == false ? m_sobel = true : m_sobel = false;
+    updateView();
+  }
+
+  // grayscale
+  else if (key == GLFW_KEY_7 && action == GLFW_PRESS)
+  {
+    m_grayscale == false ? m_grayscale = true : m_grayscale = false;
+    updateView();
+  }
+
+  // mirror at x-axis
   else if (key == GLFW_KEY_8 && action == GLFW_PRESS)
   {
     m_h_mirrored == false ? m_h_mirrored = true : m_h_mirrored = false;
     updateView();
   }
 
+  // mirror at y axis
   else if (key == GLFW_KEY_9 && action == GLFW_PRESS)
   {
     m_v_mirrored == false ? m_v_mirrored = true : m_v_mirrored = false;
+    updateView();
+  }
+
+  // bluuuuuuuuuuuuuur
+  else if (key == GLFW_KEY_0 && action == GLFW_PRESS)
+  {
+    m_blur == false ? m_blur = true : m_blur = false;
     updateView();
   }
 
@@ -579,10 +605,10 @@ void ApplicationSolar::initializeShaderPrograms()
   m_shaders.at("sun").u_locs["ProjectionMatrix"] = -1;
   m_shaders.at("sun").u_locs["ColorTex"] = -1;
 
+  // request uniform locations for shader program
   m_shaders.emplace("planet", shader_program{m_resource_path + "shaders/planet.vert",
                                            m_resource_path + "shaders/planet.frag"});
-  // request uniform locations for shader program
-  m_shaders.at("planet").u_locs["NormalMatrix"] = -1;//Eigentlich muss das nicht mehr übergeben werden, aber ohne gibt es einen Error
+  m_shaders.at("planet").u_locs["NormalMatrix"] = -1;
   m_shaders.at("planet").u_locs["ModelMatrix"] = -1;
   m_shaders.at("planet").u_locs["ViewMatrix"] = -1;
   m_shaders.at("planet").u_locs["ProjectionMatrix"] = -1;
@@ -590,10 +616,9 @@ void ApplicationSolar::initializeShaderPrograms()
   m_shaders.at("planet").u_locs["ColorTex"] = -1;
   m_shaders.at("planet").u_locs["NormalTex"] = -1;
 
-
+  // request uniform locations for shader program
   m_shaders.emplace("skysphere", shader_program{m_resource_path + "shaders/skysphere.vert",
                                            m_resource_path + "shaders/skysphere.frag"});
-  // request uniform locations for shader program
   m_shaders.at("skysphere").u_locs["ProjectionMatrix"] = -1;
   m_shaders.at("skysphere").u_locs["ViewMatrix"] = -1;
   m_shaders.at("skysphere").u_locs["ColorTex"] = -1;
@@ -607,23 +632,22 @@ void ApplicationSolar::initializeShaderPrograms()
   m_shaders.at("star").u_locs["ViewMatrix"] = -1;
   m_shaders.at("star").u_locs["ProjectionMatrix"] = -1;
 
-
-  m_shaders.emplace("orbit", 
-  shader_program{m_resource_path + "shaders/orbit.vert",
-  m_resource_path + "shaders/orbit.frag"});
-
+  // request uniform locations for orbit.shader
+  m_shaders.emplace("orbit", shader_program{m_resource_path + "shaders/orbit.vert",
+                                          m_resource_path + "shaders/orbit.frag"});
   m_shaders.at("orbit").u_locs["ModelMatrix"] = -1;
   m_shaders.at("orbit").u_locs["ViewMatrix"] = -1;
   m_shaders.at("orbit").u_locs["ProjectionMatrix"] = -1;
 
-
+  //request uniform locations for simple_quad.shader
   m_shaders.emplace("simple_quad", shader_program{m_resource_path + "shaders/simple_quad.vert",
                                            m_resource_path + "shaders/simple_quad.frag"});
   m_shaders.at("simple_quad").u_locs["ColorTex"] = -1;
-  m_shaders.at("simple_quad").u_locs["greyscale"] = -1;
+  m_shaders.at("simple_quad").u_locs["GrayScale"] = -1;
   m_shaders.at("simple_quad").u_locs["V_Mirrored"] = -1;
   m_shaders.at("simple_quad").u_locs["H_Mirrored"] = -1;
-  m_shaders.at("simple_quad").u_locs["blur"] = -1;
+  m_shaders.at("simple_quad").u_locs["Blur"] = -1;
+  m_shaders.at("simple_quad").u_locs["Sobel"] = -1;
 }
 
 
@@ -812,7 +836,8 @@ void ApplicationSolar::initializeFramebuffer()
 }
 
 // load screen quad
-void ApplicationSolar::initializeScreenQuad() {
+void ApplicationSolar::initializeScreenQuad()
+{
   all_quads.insert(std::end(all_quads),{
     -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
     1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
