@@ -40,6 +40,7 @@ class ApplicationSolar : public Application {
   //overloaded function to draw the satellits(moons)
   void upload_planet_transforms(satellite const& p) const;
   void upload_stars() const;
+  void upload_particles() const;
   void upload_starsphere() const;
   void upload_orbits(planet const& p) const;
   void upload_orbits(satellite const& p) const;
@@ -47,6 +48,8 @@ class ApplicationSolar : public Application {
 
   // calls upload_planet_transforms funct. for all planets/satellites
   void render() const;
+  void SortParticles();
+  void FindUnusedParticle();
 
  protected:
   void initializeShaderPrograms();
@@ -56,6 +59,7 @@ class ApplicationSolar : public Application {
   void initializeTextures();
   void initializeFramebuffer();
   void initializeScreenQuad();
+  void initializeParticles();
 
 
   void updateView();
@@ -63,6 +67,7 @@ class ApplicationSolar : public Application {
   void fillOrbits();
   void fillStars();
   void fillPlanets();
+  void fillParticles();
   
 
   // cpu representation of model
@@ -92,6 +97,12 @@ class ApplicationSolar : public Application {
   bool m_grayscale = bool(false);
   bool m_blur = bool(false);
   bool m_sobel = bool(true);
+
+  static const int MaxParticles = 10000;
+  particle ParticlesContainer[MaxParticles];
+  int ParticlesCount = 0;
+  int LastUsedParticle = 0;
+
 };
 
 #endif

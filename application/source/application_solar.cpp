@@ -20,7 +20,12 @@ using namespace gl;
 
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 #include <cmath>
+
+#include <vector>
+#include <algorithm>
+using namespace std;
 
 
 
@@ -31,6 +36,7 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
   fillStars();
   fillOrbits();
   fillPlanets();
+  fillParticles();
   
   initializeScreenQuad();
   initializeFramebuffer();
@@ -39,6 +45,7 @@ ApplicationSolar::ApplicationSolar(std::string const& resource_path)
   initializeGeometry();
   initializeStars();
   initializeTextures();
+  initializeParticles();
 
   initializeShaderPrograms();
 }
@@ -165,6 +172,74 @@ void ApplicationSolar::fillStars()
       all_stars.insert(std::end(all_stars),1);    
     }
   }
+}
+
+
+void ApplicationSolar::SortParticles(){
+  std::sort(&ParticlesContainer[0], &ParticlesContainer[MaxParticles]);
+}
+
+void ApplicationSolar::fillParticles(){
+
+  int ParticlesCount = 0;
+  for(int i=0; i<MaxParticles; i++){
+
+    particle& p = ParticlesContainer[i]; // shortcut
+
+    if(p.life > 0.0f){
+
+      // Decrease life
+      p.life -= delta;
+      if (p.life > 0.0f){
+
+        // Simulate simple physics : gravity only, no collisions
+        p.speed += glm::vec3(0.0f,-9.81f, 0.0f) * (float)delta * 0.5f;
+        p.pos += p.speed * (float)delta;
+        p.cameradistance = glm::length2( p.pos - CameraPosition );
+        //ParticlesContainer[i].pos += glm::vec3(0.0f,10.0f, 0.0f) * (float)delta;
+
+        // Fill the GPU buffer
+        g_particule_position_size_data[4*ParticlesCount+0] = p.pos.x;
+        g_particule_position_size_data[4*ParticlesCount+1] = p.pos.y;
+        g_particule_position_size_data[4*ParticlesCount+2] = p.pos.z;
+                         
+        g_particule_position_size_data[4*ParticlesCount+3] = p.size;
+                         
+        g_particule_color_data[4*ParticlesCount+0] = p.r;
+        g_particule_color_data[4*ParticlesCount+1] = p.g;
+        g_particule_color_data[4*ParticlesCount+2] = p.b;
+        g_particule_color_data[4*ParticlesCount+3] = p.a;
+
+      }else{
+        // Particles that just died will be put at the end of the buffer in SortParticles();
+        p.cameradistance = -1.0f;
+      }
+
+      ParticlesCount++;
+
+    }
+  }
+
+  SortParticles();
+}
+
+int ApplicationSolar::FindUnusedParticle(){
+
+    for(int i=LastUsedParticle; i<MaxParticles; i++){
+        if (ParticlesContainer[i].life < 0){
+            LastUsedParticle = i;
+            return i;
+        }
+    }
+
+    for(int i=0; i<LastUsedParticle; i++){
+        if (ParticlesContainer[i].life < 0){
+            LastUsedParticle = i;
+            return i;
+        }
+    }
+
+    return 0; // All particles are taken, override the first one
 }
 
 
@@ -335,6 +410,41 @@ void ApplicationSolar::upload_stars() const
   glDrawArrays(star_object.draw_mode, 0, (int)all_stars.size());
 }
 
+void ApplicationSolar::upload_particles() const
+{
+  glUseProgram(m_shaders.at("particle").handle);
+
+  double lastTime = glfwGetTime();
+
+  glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
+  glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
+  glBufferSubData(GL_ARRAY_BUFFER, 0, ParticlesCount * sizeof(GLfloat) * 4, g_particule_position_size_data);
+
+  glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
+  glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
+  glBufferSubData(GL_ARRAY_BUFFER, 0, ParticlesCount * sizeof(GLubyte) * 4, g_particule_color_data);
+
+
+  glEnableVertexAttribArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+  // 2nd attribute buffer : positions of particles' centers
+  glEnableVertexAttribArray(1);
+  glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
+  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+  // 3rd attribute buffer : particles' colors
+  glEnableVertexAttribArray(2);
+  glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
+
+  glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, (void*)0);
+  glVertexAttribDivisor(0, 0); // particles vertices : always reuse the same 4 vertices -> 0
+  glVertexAttribDivisor(1, 1); // positions : one per quad (its center) -> 1
+  glVertexAttribDivisor(2, 1); // color : one per quad -> 1
+
+  glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, ParticlesCount);
+}
 
 void ApplicationSolar::upload_orbits(planet const& p) const
 {
@@ -405,6 +515,7 @@ void ApplicationSolar::render() const
   }
 
   upload_stars();
+  upload_particles();
   upload_quad();
 }
 
@@ -431,6 +542,10 @@ void ApplicationSolar::updateView()
 
   glUseProgram(m_shaders.at("star").handle);
   glUniformMatrix4fv(m_shaders.at("star").u_locs.at("ViewMatrix"),
+                     1, GL_FALSE, glm::value_ptr(view_matrix));
+
+  glUseProgram(m_shaders.at("particle").handle);
+  glUniformMatrix4fv(m_shaders.at("particle").u_locs.at("ViewMatrix"),
                      1, GL_FALSE, glm::value_ptr(view_matrix));
 
   glUseProgram(m_shaders.at("orbit").handle);
@@ -463,6 +578,10 @@ void ApplicationSolar::updateProjection()
 
   glUseProgram(m_shaders.at("star").handle);
   glUniformMatrix4fv(m_shaders.at("star").u_locs.at("ProjectionMatrix"),
+                     1, GL_FALSE, glm::value_ptr(m_view_projection));
+ 
+  glUseProgram(m_shaders.at("particle").handle);
+  glUniformMatrix4fv(m_shaders.at("particle").u_locs.at("ProjectionMatrix"),
                      1, GL_FALSE, glm::value_ptr(m_view_projection));
   
   glUseProgram(m_shaders.at("orbit").handle);
@@ -631,6 +750,9 @@ void ApplicationSolar::initializeShaderPrograms()
   //wie in den shader dateien: keine model/normal notwendig
   m_shaders.at("star").u_locs["ViewMatrix"] = -1;
   m_shaders.at("star").u_locs["ProjectionMatrix"] = -1;
+
+  m_shaders.at("particle").u_locs["ViewMatrix"] = -1;
+  m_shaders.at("particle").u_locs["ProjectionMatrix"] = -1;
 
   // request uniform locations for orbit.shader
   m_shaders.emplace("orbit", shader_program{m_resource_path + "shaders/orbit.vert",
@@ -864,6 +986,63 @@ void ApplicationSolar::initializeScreenQuad()
   glBindVertexArray(0); 
 }
 
+void ApplicationSolar::initializeParticles(){
+  
+  static const GLfloat g_vertex_buffer_data[] = {
+    -0.5f, -0.5f, 0.0f,
+    0.5f, -0.5f, 0.0f,
+    -0.5f, 0.5f, 0.0f,
+    0.5f, 0.5f, 0.0f,
+  };
+  GLuint billboard_vertex_buffer;
+  glGenBuffers(1, &billboard_vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
+  // The VBO containing the positions and sizes of the particles
+  GLuint particles_position_buffer;
+  glGenBuffers(1, &particles_position_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
+  // Initialize with empty (NULL) buffer : it will be updated later, each frame.
+  glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW);
+
+ 
+  // The VBO containing the colors of the particles
+  GLuint particles_color_buffer;
+  glGenBuffers(1, &particles_color_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
+  // Initialize with empty (NULL) buffer : it will be updated later, each frame.
+  glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW);
+ 
+
+   /* not sure if here or in upload function
+  double lastTime = glfwGetTime();
+
+  glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
+  glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
+  glBufferSubData(GL_ARRAY_BUFFER, 0, ParticlesCount * sizeof(GLfloat) * 4, g_particule_position_size_data);
+
+  glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
+  glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
+  glBufferSubData(GL_ARRAY_BUFFER, 0, ParticlesCount * sizeof(GLubyte) * 4, g_particule_color_data);
+
+
+  glEnableVertexAttribArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+  // 2nd attribute buffer : positions of particles' centers
+  glEnableVertexAttribArray(1);
+  glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
+  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+  // 3rd attribute buffer : particles' colors
+  glEnableVertexAttribArray(2);
+  glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
+  glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, (void*)0);
+  */
+}
+
 
 ApplicationSolar::~ApplicationSolar()
 {
@@ -879,8 +1058,11 @@ ApplicationSolar::~ApplicationSolar()
   glDeleteBuffers(1, &orbit_object.element_BO);
   glDeleteVertexArrays(1, &orbit_object.vertex_AO);
 
-  //glDeleteFramebuffers(1, &frame_buffer_object);
+  glDeleteBuffers(1, &particles_color_buffer);
+  glDeleteBuffers(1, &particles_position_buffer);
+  glDeleteBuffers(1, &billboard_vertex_buffer);
 
+  //glDeleteFramebuffers(1, &frame_buffer_object);
 }
 
 // exe entry point
