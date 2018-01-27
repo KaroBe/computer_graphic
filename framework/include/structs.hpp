@@ -8,7 +8,8 @@
 using namespace gl;
 
 // gpu representation of model
-struct model_object {
+struct model_object
+{
   // vertex array object
   GLuint vertex_AO = 0;
   // vertex buffer object
@@ -22,7 +23,8 @@ struct model_object {
 };
 
 // gpu representation of texture
-struct texture_object {
+struct texture_object
+{
   // handle of texture object
   GLuint handle = 0;
   // binding point
@@ -30,7 +32,8 @@ struct texture_object {
 };
 
 // shader handle and uniform storage
-struct shader_program {
+struct shader_program
+{
   shader_program(std::string const& vertex, std::string const& fragment)
    :vertex_path{vertex}
    ,fragment_path{fragment}
@@ -47,7 +50,8 @@ struct shader_program {
 };
 
 //struct for the planets
-struct planet {
+struct planet
+{
   planet(float const& size, float const& rot_speed, float const& dis_to_origin)
     :m_size{size},
     m_rot_speed{rot_speed},
@@ -60,7 +64,8 @@ struct planet {
 };
 
 //struct for the satellites/moons with given father planet
-struct satellite {
+struct satellite
+{
   satellite(planet const& father, float const& size, float const& rot_speed, float const& dis_to_father)
     :m_father{father},
     m_size{size},
@@ -74,15 +79,16 @@ struct satellite {
   float m_dis_to_father;
 };
 
-struct particle{
+struct particle
+{
   glm::vec3 pos, speed;
   unsigned char r,g,b,a; // Color
   float size, angle, weight;
   float life; // Remaining life of the particle. if <0 : dead and unused.
   float cameradistance; // *Squared* distance to the camera. if dead : -1.0f
 
-  bool operator<(const particle& that) const {
-    // Sort in reverse order : far particles drawn first.
+  bool operator<(const particle& that) const
+  {
     return this->cameradistance > that.cameradistance;
   }
 };

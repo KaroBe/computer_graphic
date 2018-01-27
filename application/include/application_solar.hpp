@@ -49,7 +49,7 @@ class ApplicationSolar : public Application {
   // calls upload_planet_transforms funct. for all planets/satellites
   void render() const;
   void SortParticles();
-  void FindUnusedParticle();
+  int FindUnusedParticle();
 
  protected:
   void initializeShaderPrograms();
@@ -102,7 +102,6 @@ class ApplicationSolar : public Application {
   particle ParticlesContainer[MaxParticles];
   int ParticlesCount = 0;
   int LastUsedParticle = 0;
-
 };
 
 #endif
